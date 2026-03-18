@@ -6,8 +6,8 @@ import { motion, AnimatePresence } from "framer-motion";
 const navLinks = [
   { label: "TODOS OS PRODUTOS", href: "#produtos" },
   { label: "LANÇAMENTOS", href: "#lancamentos" },
-  { label: "MODA PRAIA", href: "#praia" },
-  { label: "ALL JEANS", href: "#jeans" },
+  { label: "ROUPAS", href: "#roupas" },
+  { label: "COSMÉTICOS", href: "#cosmeticos" },
 ];
 
 const Header = () => {
@@ -43,10 +43,10 @@ const Header = () => {
           {/* Logo */}
           <div className="flex-1 md:flex-none text-center">
             <h1 className="font-display text-2xl md:text-3xl font-bold text-gradient-gold tracking-wide">
-              BOX DA JULIETE
+              NS Closet
             </h1>
             <p className="text-[10px] tracking-[0.3em] text-muted-foreground uppercase">
-              Moda Feminina
+              Roupas e Cosméticos para o seu dia a dia.
             </p>
           </div>
 

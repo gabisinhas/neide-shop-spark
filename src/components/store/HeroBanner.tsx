@@ -4,10 +4,10 @@ import heroBanner from "@/assets/hero-banner.png";
 const HeroBanner = () => {
   return (
     <section className="relative w-full overflow-hidden">
-      <div className="relative h-[50vh] md:h-[70vh] lg:h-[80vh]">
+      <div>
         <img
           src={heroBanner}
-          alt="Coleção Verão 2026 - Explosão de cores para seu verão"
+          alt="Coleção 2026 - Praticidade para você!"
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-foreground/40 via-transparent to-transparent" />
@@ -18,12 +18,13 @@ const HeroBanner = () => {
           className="absolute inset-0 flex flex-col items-start justify-center px-8 md:px-16 lg:px-24"
         >
           <h2 className="font-display text-4xl md:text-6xl lg:text-7xl font-bold text-primary-foreground leading-tight">
-            Verão
             <br />
-            <span className="text-gradient-gold">Coleção 2026</span>
+            <span className="bg-gradient-to-r from-amber-900 to-stone-700 bg-clip-text text-transparent">
+              Coleção 2026
+            </span>
           </h2>
           <p className="mt-4 text-lg md:text-xl text-primary-foreground/90 max-w-md">
-            Explosão de cores para seu verão!
+            Praticidade para você!
           </p>
           <a
             href="#lancamentos"

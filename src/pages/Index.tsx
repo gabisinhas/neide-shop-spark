@@ -4,7 +4,6 @@ import HeroBanner from "@/components/store/HeroBanner";
 import BenefitsBar from "@/components/store/BenefitsBar";
 import ProductSection from "@/components/store/ProductSection";
 import PromoBanner from "@/components/store/PromoBanner";
-import Newsletter from "@/components/store/Newsletter";
 import Footer from "@/components/store/Footer";
 import CartDrawer from "@/components/store/CartDrawer";
 import WhatsAppButton from "@/components/store/WhatsAppButton";
@@ -38,7 +37,6 @@ const Index = () => {
         </div>
       )}
 
-      <Newsletter />
       <Footer />
       <CartDrawer />
       <WhatsAppButton />
