@@ -1,0 +1,91 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  role      String   @default("customer") // 'customer' | 'admin'
+  provider  String   @default("email")    // 'email' | 'google'
+  password  String?
+  address   Json?    // Stores the OrderAddress JSON
+  deletedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  orders    Order[]
+}
+
+model Product {
+  id            String           @id @default(uuid())
+  name          String
+  price         Float
+  salePrice     Float?
+  originalPrice Float?
+  description   String           @default("")
+  sku           String           @unique
+  stockQuantity Int              @default(0)
+  weight        Float            @default(0)
+  height        Float            @default(0)
+  width         Float            @default(0)
+  length        Float            @default(0)
+  image         String           @default("")
+  imageStorageProvider String?   // 's3' | 'local'
+  imageStorageKey String?
+  imageContentType String?
+  imageUploadedAt DateTime?
+  category      String
+  tag           String?          // 'lancamento' | 'destaque' | 'oferta'
+  installments  Json?            // { count: Int, value: Float }
+  deletedAt     DateTime?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  variants      ProductVariant[]
+}
+
+model ProductVariant {
+  id        String   @id @default(uuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  size      String   // E.g., 'P', 'M', 'G', 'GG', 'U' (for cosmetics or single-size items)
+  stock     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orderItems OrderItem[]
+
+  @@unique([productId, size])
+}
+
+model Order {
+  id            String      @id @default(uuid())
+  userId        String
+  user          User        @relation(fields: [userId], references: [id])
+  status        String      @default("pending_payment")
+  subtotal      Float
+  shippingFee   Float
+  total         Float
+  paymentMethod String
+  address       Json        // Stores the OrderAddress JSON
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  
+  items         OrderItem[]
+}
+
+model OrderItem {
+  id               String         @id @default(uuid())
+  orderId          String
+  order            Order          @relation(fields: [orderId], references: [id])
+  productVariantId String
+  productVariant   ProductVariant @relation(fields: [productVariantId], references: [id])
+  quantity         Int
+  price            Float          // Unit price of the product variant at the time of purchase
+}
