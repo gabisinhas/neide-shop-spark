@@ -88,6 +88,8 @@ export function applyRouteRateLimiters(app: express.Express) {
   app.use('/api/auth/login', authRateLimiter);
   app.use('/api/auth/register', authRateLimiter);
   app.use('/api/auth/refresh', authRateLimiter);
+  app.use('/api/auth/forgot-password', authRateLimiter);
+  app.use('/api/auth/reset-password', authRateLimiter);
   app.use('/api/auth/google', authRateLimiter);
   app.use('/api/payments/mercado-pago/checkout', paymentRateLimiter);
   app.use('/api/payments/mercado-pago/webhook', webhookRateLimiter);

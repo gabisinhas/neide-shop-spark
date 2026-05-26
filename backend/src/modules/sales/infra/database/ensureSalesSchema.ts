@@ -34,4 +34,21 @@ export async function ensureSalesSchema() {
       quantity INTEGER NOT NULL CHECK (quantity > 0)
     )
   `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS inventory_movements (
+      id BIGSERIAL PRIMARY KEY,
+      order_id TEXT REFERENCES orders(id) ON DELETE SET NULL,
+      product_id TEXT NOT NULL,
+      variant_id TEXT,
+      movement_type TEXT NOT NULL,
+      quantity INTEGER NOT NULL CHECK (quantity > 0),
+      reason TEXT NOT NULL,
+      actor_user_id TEXT,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+
+  await pool.query('CREATE INDEX IF NOT EXISTS inventory_movements_order_id_idx ON inventory_movements(order_id)');
+  await pool.query('CREATE INDEX IF NOT EXISTS inventory_movements_product_id_idx ON inventory_movements(product_id)');
 }

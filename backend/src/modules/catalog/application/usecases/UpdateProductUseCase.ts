@@ -1,10 +1,14 @@
 import { ApplicationError } from '../../../../shared/application/ApplicationError';
+import { CategoryRepository } from '../../domain/repositories/CategoryRepository';
 import { ProductValidationService } from '../../domain/services/ProductValidationService';
 import { ProductRepository } from '../../domain/repositories/ProductRepository';
 import { UpdateProductDTO } from '../dto/ProductDTO';
 
 export class UpdateProductUseCase {
-  constructor(private readonly productRepository: ProductRepository) {}
+  constructor(
+    private readonly productRepository: ProductRepository,
+    private readonly categoryRepository: CategoryRepository,
+  ) {}
 
   async execute(id: string, input: UpdateProductDTO) {
     const payload = {
@@ -20,6 +24,17 @@ export class UpdateProductUseCase {
     };
 
     ProductValidationService.validateForUpdate(payload);
+
+    if (payload.category) {
+      const category = await this.categoryRepository.findByName(payload.category);
+
+      if (!category) {
+        throw new ApplicationError('Categoria nao encontrada.', 400, 'CATEGORY_NOT_FOUND');
+      }
+
+      payload.category = category.name;
+    }
+
     const product = await this.productRepository.update(id, payload);
 
     if (!product) {

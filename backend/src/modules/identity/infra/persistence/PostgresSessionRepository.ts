@@ -21,4 +21,8 @@ export class PostgresSessionRepository implements SessionRepository {
   async delete(token: string) {
     await this.pool.query('DELETE FROM sessions WHERE token = $1', [token]);
   }
+
+  async deleteByUserId(userId: string) {
+    await this.pool.query('DELETE FROM sessions WHERE user_id = $1', [userId]);
+  }
 }

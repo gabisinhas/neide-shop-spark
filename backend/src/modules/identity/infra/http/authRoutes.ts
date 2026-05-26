@@ -3,13 +3,20 @@ import { ApplicationError } from '../../../../shared/application/ApplicationErro
 import { asyncHandler } from '../../../../shared/infra/http/asyncHandler';
 import { AuthGuards, getCurrentUserFromLocals } from '../../../../shared/infra/http/authGuards';
 import { validateBody } from '../../../../shared/infra/http/requestValidation';
-import { googleCredentialBodySchema, googleExchangeBodySchema, loginBodySchema, registerBodySchema } from '../../../../shared/infra/http/requestSchemas';
+import {
+  forgotPasswordBodySchema,
+  googleCredentialBodySchema,
+  googleExchangeBodySchema,
+  loginBodySchema,
+  registerBodySchema,
+  resetPasswordBodySchema,
+} from '../../../../shared/infra/http/requestSchemas';
 import { IdentityModule } from '../IdentityModule';
 
 const GOOGLE_OAUTH_STATE_COOKIE = 'google_oauth_state';
 const GOOGLE_OAUTH_CALLBACK_PATH = '/api/auth/google/callback';
 const REFRESH_TOKEN_COOKIE = 'refresh_token';
-const REFRESH_TOKEN_COOKIE_PATH = '/api/auth';
+const REFRESH_TOKEN_COOKIE_PATH = '/';
 type CookieSameSite = 'Strict' | 'Lax' | 'None';
 
 export function createAuthRoutes(module: IdentityModule, authGuards: AuthGuards) {
@@ -41,6 +48,24 @@ export function createAuthRoutes(module: IdentityModule, authGuards: AuthGuards)
       });
 
       respondWithAuthentication(res, auth);
+    }),
+  );
+
+  router.post(
+    '/forgot-password',
+    validateBody(forgotPasswordBodySchema),
+    asyncHandler(async (req, res) => {
+      const result = await module.forgotPassword.execute(req.body);
+      res.status(202).json(result);
+    }),
+  );
+
+  router.post(
+    '/reset-password',
+    validateBody(resetPasswordBodySchema),
+    asyncHandler(async (req, res) => {
+      await module.resetPassword.execute(req.body);
+      res.status(204).send();
     }),
   );
 

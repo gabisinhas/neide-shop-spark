@@ -1,4 +1,5 @@
 import { Pool, PoolClient } from 'pg';
+import { ApplicationError } from '../../../../shared/application/ApplicationError';
 import { Product } from '../../../catalog/domain/entities/Product';
 import { Address } from '../../../identity/domain/entities/User';
 import { Order, OrderItem } from '../../domain/entities/Order';
@@ -113,6 +114,81 @@ export class PostgresOrderRepository implements OrderRepository {
     return this.findById(orderId);
   }
 
+  async markAsPaid(orderId: string) {
+    const client = await this.pool.connect();
+
+    try {
+      await client.query('BEGIN');
+
+      const orderResult = await client.query<OrderRow>('SELECT * FROM orders WHERE id = $1 LIMIT 1 FOR UPDATE', [orderId]);
+
+      if (!orderResult.rows[0]) {
+        await client.query('ROLLBACK');
+        return null;
+      }
+
+      const itemResult = await client.query<OrderItemRow>(
+        'SELECT * FROM order_items WHERE order_id = $1 ORDER BY id ASC FOR UPDATE',
+        [orderId],
+      );
+
+      const orderRow = orderResult.rows[0];
+
+      if (orderRow.status !== 'paid') {
+        const productQuantities = aggregateQuantitiesByProduct(itemResult.rows);
+
+        for (const [productId, quantity] of productQuantities.entries()) {
+          const productResult = await client.query<{ stockQuantity: number }>(
+            'SELECT "stockQuantity" FROM "Product" WHERE id = $1 AND "deletedAt" IS NULL LIMIT 1 FOR UPDATE',
+            [productId],
+          );
+
+          const currentStock = productResult.rows[0]?.stockQuantity;
+
+          if (currentStock == null) {
+            throw new ApplicationError('Produto do pedido nao encontrado para baixa de estoque.', 409, 'ORDER_PRODUCT_NOT_FOUND');
+          }
+
+          if (currentStock < quantity) {
+            throw new ApplicationError('Estoque insuficiente para confirmar o pedido.', 409, 'INSUFFICIENT_STOCK');
+          }
+
+          await client.query(
+            'UPDATE "Product" SET "stockQuantity" = "stockQuantity" - $2, "updatedAt" = NOW() WHERE id = $1',
+            [productId, quantity],
+          );
+
+          await client.query(
+            `
+              INSERT INTO inventory_movements (
+                order_id,
+                product_id,
+                variant_id,
+                movement_type,
+                quantity,
+                reason,
+                actor_user_id,
+                created_at
+              )
+              VALUES ($1, $2, NULL, $3, $4, $5, NULL, NOW())
+            `,
+            [orderId, productId, 'decrease', quantity, 'payment_approved'],
+          );
+        }
+
+        await client.query('UPDATE orders SET status = $2, updated_at = NOW() WHERE id = $1', [orderId, 'paid']);
+      }
+
+      await client.query('COMMIT');
+      return this.findById(orderId);
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+
   private async insertItem(client: PoolClient, orderId: string, item: OrderItem) {
     await client.query(
       `
@@ -163,18 +239,7 @@ export class PostgresOrderRepository implements OrderRepository {
 
     for (const row of result.rows) {
       const current = itemsByOrder.get(row.order_id) ?? [];
-      current.push({
-        product: {
-          id: row.product_id,
-          name: row.product_name,
-          price: Number(row.product_price),
-          originalPrice: row.product_original_price == null ? undefined : Number(row.product_original_price),
-          image: row.product_image,
-          category: row.product_category,
-          tag: row.product_tag ?? undefined,
-        },
-        quantity: row.quantity,
-      });
+      current.push(this.toOrderItem(row));
       itemsByOrder.set(row.order_id, current);
     }
 
@@ -198,4 +263,29 @@ export class PostgresOrderRepository implements OrderRepository {
       updatedAt: new Date(row.updated_at).toISOString(),
     };
   }
+
+  private toOrderItem(row: OrderItemRow): OrderItem {
+    return {
+      product: {
+        id: row.product_id,
+        name: row.product_name,
+        price: Number(row.product_price),
+        originalPrice: row.product_original_price == null ? undefined : Number(row.product_original_price),
+        image: row.product_image,
+        category: row.product_category,
+        tag: row.product_tag ?? undefined,
+      },
+      quantity: row.quantity,
+    };
+  }
+}
+
+function aggregateQuantitiesByProduct(items: OrderItemRow[]) {
+  const quantities = new Map<string, number>();
+
+  for (const item of items) {
+    quantities.set(item.product_id, (quantities.get(item.product_id) ?? 0) + item.quantity);
+  }
+
+  return quantities;
 }

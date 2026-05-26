@@ -13,6 +13,10 @@ type ProductRow = {
   tag: Product['tag'] | null;
   installments_count: number | null;
   installments_value: string | number | null;
+  image_storage_key: string | null;
+  image_storage_provider: string | null;
+  image_content_type: string | null;
+  image_uploaded_at: Date | string | null;
 };
 
 export class PostgresProductRepository implements ProductRepository {
@@ -42,9 +46,13 @@ export class PostgresProductRepository implements ProductRepository {
           category,
           tag,
           installments_count,
-          installments_value
+          installments_value,
+          image_storage_key,
+          image_storage_provider,
+          image_content_type,
+          image_uploaded_at
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
       `,
       [
         id,
@@ -56,6 +64,10 @@ export class PostgresProductRepository implements ProductRepository {
         product.tag ?? null,
         product.installments?.count ?? null,
         product.installments?.value ?? null,
+        product.imageStorageKey ?? null,
+        product.imageStorageProvider ?? null,
+        product.imageContentType ?? null,
+        product.imageUploadedAt ?? null,
       ],
     );
 
@@ -87,6 +99,10 @@ export class PostgresProductRepository implements ProductRepository {
           tag = $7,
           installments_count = $8,
           installments_value = $9,
+          image_storage_key = $10,
+          image_storage_provider = $11,
+          image_content_type = $12,
+          image_uploaded_at = $13,
           updated_at = NOW()
         WHERE id = $1
       `,
@@ -100,6 +116,10 @@ export class PostgresProductRepository implements ProductRepository {
         merged.tag ?? null,
         merged.installments?.count ?? null,
         merged.installments?.value ?? null,
+        merged.imageStorageKey ?? null,
+        merged.imageStorageProvider ?? null,
+        merged.imageContentType ?? null,
+        merged.imageUploadedAt ?? null,
       ],
     );
 
@@ -128,6 +148,10 @@ export class PostgresProductRepository implements ProductRepository {
       category: row.category,
       tag: row.tag ?? undefined,
       installments,
+      imageStorageKey: row.image_storage_key ?? undefined,
+      imageStorageProvider: row.image_storage_provider ?? undefined,
+      imageContentType: row.image_content_type ?? undefined,
+      imageUploadedAt: row.image_uploaded_at ? new Date(row.image_uploaded_at).toISOString() : undefined,
     };
   }
 }

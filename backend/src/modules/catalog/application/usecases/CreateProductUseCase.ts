@@ -1,9 +1,14 @@
 import { ProductValidationService } from '../../domain/services/ProductValidationService';
 import { CreateProductDTO } from '../dto/ProductDTO';
+import { CategoryRepository } from '../../domain/repositories/CategoryRepository';
 import { ProductRepository } from '../../domain/repositories/ProductRepository';
+import { ApplicationError } from '../../../../shared/application/ApplicationError';
 
 export class CreateProductUseCase {
-  constructor(private readonly productRepository: ProductRepository) {}
+  constructor(
+    private readonly productRepository: ProductRepository,
+    private readonly categoryRepository: CategoryRepository,
+  ) {}
 
   async execute(input: CreateProductDTO) {
     const product = {
@@ -19,6 +24,15 @@ export class CreateProductUseCase {
     };
 
     ProductValidationService.validateForCreation(product);
-    return this.productRepository.create(product);
+    const category = await this.categoryRepository.findByName(product.category);
+
+    if (!category) {
+      throw new ApplicationError('Categoria nao encontrada.', 400, 'CATEGORY_NOT_FOUND');
+    }
+
+    return this.productRepository.create({
+      ...product,
+      category: category.name,
+    });
   }
 }

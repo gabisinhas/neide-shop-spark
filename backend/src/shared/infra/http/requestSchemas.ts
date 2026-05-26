@@ -47,6 +47,31 @@ export const googleExchangeBodySchema = z.object({
   token: z.string().trim().min(1),
 });
 
+export const forgotPasswordBodySchema = z.object({
+  email: z.string().trim().email(),
+});
+
+export const resetPasswordBodySchema = z.object({
+  token: z.string().trim().min(1),
+  password: z.string().min(6).max(128),
+});
+
+export const createCategoryBodySchema = z.object({
+  name: z.string().trim().min(2).max(120),
+  slug: z.string().trim().min(2).max(120).optional(),
+  description: z.string().trim().min(1).max(500).optional(),
+});
+
+export const updateCategoryBodySchema = z
+  .object({
+    name: z.string().trim().min(2).max(120).optional(),
+    slug: z.string().trim().min(2).max(120).optional(),
+    description: z.string().trim().min(1).max(500).optional(),
+  })
+  .refine((value) => Object.keys(value).length > 0, {
+    message: 'Informe ao menos um campo para atualizar a categoria.',
+  });
+
 export const orderListQuerySchema = z.object({
   userId: z.string().trim().min(1).optional(),
 });

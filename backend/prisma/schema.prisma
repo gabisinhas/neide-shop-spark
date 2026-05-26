@@ -20,6 +20,7 @@ model User {
   updatedAt DateTime @updatedAt
   
   orders    Order[]
+  passwordResetTokens PasswordResetToken[]
 }
 
 model Product {
@@ -88,4 +89,12 @@ model OrderItem {
   productVariant   ProductVariant @relation(fields: [productVariantId], references: [id])
   quantity         Int
   price            Float          // Unit price of the product variant at the time of purchase
+}
+
+model PasswordResetToken {
+  token     String   @id
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
 }

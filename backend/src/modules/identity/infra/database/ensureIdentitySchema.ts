@@ -48,6 +48,15 @@ export async function ensureIdentitySchema() {
     )
   `);
 
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS password_reset_tokens (
+      token TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      expires_at TIMESTAMPTZ NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+
   const adminEmail = 'superadmin@nscloset.com';
   const adminExists = await pool.query<{ id: string }>('SELECT id FROM users WHERE email = $1 LIMIT 1', [adminEmail]);
 

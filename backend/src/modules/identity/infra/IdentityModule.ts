@@ -4,11 +4,13 @@ import { AuthenticateWithGoogleUseCase } from '../application/usecases/Authentic
 import { ConsumeOAuthLoginResultUseCase } from '../application/usecases/ConsumeOAuthLoginResultUseCase';
 import { CreateOAuthLoginResultUseCase } from '../application/usecases/CreateOAuthLoginResultUseCase';
 import { DeactivateUserUseCase } from '../application/usecases/DeactivateUserUseCase';
+import { ForgotPasswordUseCase } from '../application/usecases/ForgotPasswordUseCase';
 import { GetCurrentUserBySessionTokenUseCase } from '../application/usecases/GetCurrentUserBySessionTokenUseCase';
 import { GetUserByIdUseCase } from '../application/usecases/GetUserByIdUseCase';
 import { ListUsersUseCase } from '../application/usecases/ListUsersUseCase';
 import { LoginUserUseCase } from '../application/usecases/LoginUserUseCase';
 import { RegisterUserUseCase } from '../application/usecases/RegisterUserUseCase';
+import { ResetPasswordUseCase } from '../application/usecases/ResetPasswordUseCase';
 import { RefreshSessionUseCase } from '../application/usecases/RefreshSessionUseCase';
 import { LogoutSessionUseCase } from '../application/usecases/LogoutSessionUseCase';
 import { UpdateUserRoleUseCase } from '../application/usecases/UpdateUserRoleUseCase';
@@ -17,6 +19,7 @@ import { GoogleOAuthClient } from './google/GoogleOAuthClient';
 import { GoogleOAuthStateService } from './google/GoogleOAuthStateService';
 import { GoogleTokenVerifier } from './google/GoogleTokenVerifier';
 import { PostgresOAuthLoginResultRepository } from './persistence/PostgresOAuthLoginResultRepository';
+import { PostgresPasswordResetTokenRepository } from './persistence/PostgresPasswordResetTokenRepository';
 import { PostgresRefreshTokenRepository } from './persistence/PostgresRefreshTokenRepository';
 import { PostgresSessionRepository } from './persistence/PostgresSessionRepository';
 import { PostgresUserRepository } from './persistence/PostgresUserRepository';
@@ -25,9 +28,12 @@ export class IdentityModule {
   readonly userRepository: PostgresUserRepository;
   readonly sessionRepository: PostgresSessionRepository;
   readonly refreshTokenRepository: PostgresRefreshTokenRepository;
+  readonly passwordResetTokenRepository: PostgresPasswordResetTokenRepository;
   readonly oauthLoginResultRepository: PostgresOAuthLoginResultRepository;
   readonly registerUser: RegisterUserUseCase;
   readonly loginUser: LoginUserUseCase;
+  readonly forgotPassword: ForgotPasswordUseCase;
+  readonly resetPassword: ResetPasswordUseCase;
   readonly authenticateWithGoogle: AuthenticateWithGoogleUseCase;
   readonly createOAuthLoginResult: CreateOAuthLoginResultUseCase;
   readonly consumeOAuthLoginResult: ConsumeOAuthLoginResultUseCase;
@@ -46,6 +52,7 @@ export class IdentityModule {
     this.userRepository = new PostgresUserRepository(pool);
     this.sessionRepository = new PostgresSessionRepository(pool);
     this.refreshTokenRepository = new PostgresRefreshTokenRepository(pool);
+    this.passwordResetTokenRepository = new PostgresPasswordResetTokenRepository(pool);
     this.oauthLoginResultRepository = new PostgresOAuthLoginResultRepository(pool);
     const googleTokenVerifier = new GoogleTokenVerifier();
     this.googleOAuthClient = new GoogleOAuthClient();
@@ -53,6 +60,13 @@ export class IdentityModule {
 
     this.registerUser = new RegisterUserUseCase(this.userRepository, this.sessionRepository, this.refreshTokenRepository);
     this.loginUser = new LoginUserUseCase(this.userRepository, this.sessionRepository, this.refreshTokenRepository);
+    this.forgotPassword = new ForgotPasswordUseCase(this.userRepository, this.passwordResetTokenRepository);
+    this.resetPassword = new ResetPasswordUseCase(
+      this.userRepository,
+      this.passwordResetTokenRepository,
+      this.sessionRepository,
+      this.refreshTokenRepository,
+    );
     this.authenticateWithGoogle = new AuthenticateWithGoogleUseCase(
       this.userRepository,
       this.sessionRepository,

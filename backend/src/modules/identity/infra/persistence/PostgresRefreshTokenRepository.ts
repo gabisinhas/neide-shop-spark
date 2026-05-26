@@ -25,4 +25,8 @@ export class PostgresRefreshTokenRepository implements RefreshTokenRepository {
   async delete(token: string) {
     await this.pool.query('DELETE FROM refresh_tokens WHERE token = $1', [token]);
   }
+
+  async deleteByUserId(userId: string) {
+    await this.pool.query('DELETE FROM refresh_tokens WHERE user_id = $1', [userId]);
+  }
 }

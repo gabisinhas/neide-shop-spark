@@ -25,7 +25,11 @@ export class HandleMercadoPagoWebhookUseCase {
     }
 
     const nextStatus: OrderStatus = mapPaymentStatusToOrderStatus(payment.status);
-    await this.orderRepository.updateStatus(payment.externalReference, nextStatus);
+    if (nextStatus === 'paid') {
+      await this.orderRepository.markAsPaid(payment.externalReference);
+    } else {
+      await this.orderRepository.updateStatus(payment.externalReference, nextStatus);
+    }
 
     return {
       acknowledged: true,

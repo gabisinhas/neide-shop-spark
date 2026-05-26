@@ -6,4 +6,5 @@ export interface OrderRepository {
   list(): Promise<Order[]>;
   create(order: Order): Promise<Order>;
   updateStatus(orderId: string, status: Order['status']): Promise<Order | null>;
+  markAsPaid(orderId: string): Promise<Order | null>;
 }

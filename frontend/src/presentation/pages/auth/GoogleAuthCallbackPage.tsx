@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/presentation/contexts/AuthContext';
 import { APP_ROUTES } from '@/presentation/routes/paths';
@@ -8,21 +8,30 @@ export default function GoogleAuthCallbackPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [error, setError] = useState('');
+  const hasProcessedLogin = useRef(false);
 
   useEffect(() => {
+    if (hasProcessedLogin.current) {
+      return;
+    }
+
     const errorCode = searchParams.get('error');
     const token = searchParams.get('token');
     const redirectTo = searchParams.get('redirectTo') || APP_ROUTES.orders;
 
     if (errorCode) {
+      hasProcessedLogin.current = true;
       setError(`Google retornou um erro de autenticacao: ${errorCode}.`);
       return;
     }
 
     if (!token) {
+      hasProcessedLogin.current = true;
       setError('Token de conclusao do login Google ausente.');
       return;
     }
+
+    hasProcessedLogin.current = true;
 
     const finishLogin = async () => {
       try {

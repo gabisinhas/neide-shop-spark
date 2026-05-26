@@ -3,6 +3,7 @@ import { AppDependencies } from './dependencies';
 import { asyncHandler } from '../shared/infra/http/asyncHandler';
 import { createAuthGuards } from '../shared/infra/http/authGuards';
 import { createMercadoPagoRoutes } from '../modules/billing/infra/http/mercadoPagoRoutes';
+import { createCategoryRoutes } from '../modules/catalog/infra/http/categoryRoutes';
 import { createProductRoutes } from '../modules/catalog/infra/http/productRoutes';
 import { createAuthRoutes } from '../modules/identity/infra/http/authRoutes';
 import { createUserRoutes } from '../modules/identity/infra/http/userRoutes';
@@ -24,6 +25,7 @@ export function createRoutes(dependencies: AppDependencies) {
   );
 
   router.use('/products', createProductRoutes(dependencies.catalog, authGuards));
+  router.use('/categories', createCategoryRoutes(dependencies.catalog, authGuards));
 
   router.use('/auth', createAuthRoutes(dependencies.identity, authGuards));
   router.use('/users', createUserRoutes(dependencies.identity, authGuards));
